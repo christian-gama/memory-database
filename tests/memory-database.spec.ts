@@ -124,13 +124,17 @@ describe('MemoryDatabase', () => {
 
       const fakeUser = makeFakeUser()
       const fakeUser2 = makeFakeUser()
+      const fakeUser3 = makeFakeUser()
+      const fakeUser4 = makeFakeUser()
 
       await collection.insertOne(fakeUser)
       await collection.insertOne(fakeUser2)
+      await collection.insertOne(fakeUser3)
+      await collection.insertOne(fakeUser4)
 
       const deletedCount = await collection.deleteMany({ 'personal.id': fakeUser.personal.id })
 
-      expect(deletedCount).toBeGreaterThan(0)
+      expect(deletedCount).toBe(1)
 
       await collection.deleteMany({})
     })
@@ -146,6 +150,29 @@ describe('MemoryDatabase', () => {
 
       await collection.deleteMany({})
     })
+
+    it('should return the deleted count equal to 0 if does find equal document', async () => {
+      expect.hasAssertions()
+
+      const fakeUser = makeFakeUser()
+      await collection.insertOne(fakeUser)
+
+      const deletedCount = await collection.deleteMany({ 'different.id': 'any_value' })
+
+      expect(deletedCount).toBe(0)
+
+      await collection.deleteMany({})
+    })
+
+    it('should return the deleted count equal to 0 if collection is empty', async () => {
+      expect.hasAssertions()
+
+      const deletedCount = await collection.deleteMany({ 'different.id': 'any_value' })
+
+      expect(deletedCount).toBe(0)
+
+      await collection.deleteMany({})
+    })
   })
 
   describe('deleteOne', () => {
@@ -155,6 +182,7 @@ describe('MemoryDatabase', () => {
       const fakeUser = makeFakeUser()
 
       await collection.insertOne(fakeUser)
+      await collection.insertOne(fakeUser)
 
       const deleted = await collection.deleteOne({ 'personal.id': fakeUser.personal.id })
 
@@ -163,14 +191,81 @@ describe('MemoryDatabase', () => {
       await collection.deleteMany({})
     })
 
-    it('should return false if does not deleted a document', async () => {
+    it('should return false if does not find a document', async () => {
+      expect.hasAssertions()
+
+      const fakeUser = makeFakeUser()
+      await collection.insertOne(fakeUser)
+
+      const deleted = await collection.deleteOne({ 'any.id': 'any_id' })
+
+      expect(deleted).toBe(false)
+
+      await collection.deleteMany({})
+    })
+
+    it('should return false if does collection is empty', async () => {
+      expect.hasAssertions()
+
+      const deleted = await collection.deleteOne({ 'any.id': 'any_id' })
+
+      expect(deleted).toBe(false)
+
+      await collection.deleteMany({})
+    })
+  })
+
+  describe('findMany', () => {
+    it('should return a document[] if found using dot property', async () => {
       expect.hasAssertions()
 
       const fakeUser = makeFakeUser()
 
-      const deleted = await collection.deleteOne({ 'personal.id': fakeUser.personal.id })
+      await collection.insertOne(fakeUser)
+      await collection.insertOne(fakeUser)
+      await collection.insertOne(fakeUser)
 
-      expect(deleted).toBe(false)
+      const document = (await collection.findMany({ 'personal.name': fakeUser.personal.name }))
+
+      expect(document.length).toBe(3)
+
+      await collection.deleteMany({})
+    })
+
+    it('should return a document[] if found', async () => {
+      expect.hasAssertions()
+
+      const fakeUser = makeFakeUser()
+      await collection.insertOne(fakeUser)
+      await collection.insertOne(fakeUser)
+      await collection.insertOne(fakeUser)
+
+      const document = (await collection.findMany({ personal: { name: fakeUser.personal.name } }))
+
+      expect(document.length).toBe(3)
+
+      await collection.deleteMany({})
+    })
+
+    it('should return null if does not find a document', async () => {
+      expect.hasAssertions()
+
+      const fakeUser = makeFakeUser()
+      await collection.insertOne({ any_field: 'any_value' })
+
+      const document = await collection.findMany(fakeUser)
+
+      expect(document.length).toBe(0)
+
+      await collection.deleteMany({})
+    })
+
+    it('should return null if collection is empty', async () => {
+      expect.hasAssertions()
+
+      const document = await collection.findMany({ any: 'field' })
+
+      expect(document.length).toBe(0)
 
       await collection.deleteMany({})
     })
@@ -216,6 +311,16 @@ describe('MemoryDatabase', () => {
 
       await collection.deleteMany({})
     })
+
+    it('should return null if collection is empty', async () => {
+      expect.hasAssertions()
+
+      const document = await collection.findOne({ any: 'field' })
+
+      expect(document).toBeNull()
+
+      await collection.deleteMany({})
+    })
   })
 
   describe('insertOne', () => {
@@ -233,7 +338,7 @@ describe('MemoryDatabase', () => {
   })
 
   describe('updateOne', () => {
-    it('should return the updated user', async () => {
+    it('should return the updated user using dot object', async () => {
       expect.hasAssertions()
 
       const fakeUser = makeFakeUser()
@@ -241,6 +346,21 @@ describe('MemoryDatabase', () => {
 
       const updatedUser = (await collection.updateOne(fakeUser, {
         'personal.name': 'any_name'
+      }))
+
+      expect(updatedUser?.personal.name).toBe('any_name')
+
+      await collection.deleteMany({})
+    })
+
+    it('should return the updated user', async () => {
+      expect.hasAssertions()
+
+      const fakeUser = makeFakeUser()
+      await collection.insertOne(fakeUser)
+
+      const updatedUser = (await collection.updateOne(fakeUser, {
+        personal: { name: 'any_name' }
       }))
 
       expect(updatedUser?.personal.name).toBe('any_name')
@@ -261,6 +381,18 @@ describe('MemoryDatabase', () => {
       const updatedUser = await collection.findOne(fakeUser)
 
       expect(updatedUser).toBeNull()
+
+      await collection.deleteMany({})
+    })
+
+    it('should return null if collection is empty', async () => {
+      expect.hasAssertions()
+
+      const result = await collection.updateOne({ any: 'field' }, {
+        'personal.name': 'any_name'
+      })
+
+      expect(result).toBeNull()
 
       await collection.deleteMany({})
     })

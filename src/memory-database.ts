@@ -20,6 +20,7 @@ export class MemoryDatabase extends ICollection implements DatabaseProtocol {
     return {
       deleteMany: this.deleteMany.bind(this),
       deleteOne: this.deleteOne.bind(this),
+      findMany: this.findMany.bind(this),
       findOne: this.findOne.bind(this),
       insertOne: this.insertOne.bind(this),
       updateOne: this.updateOne.bind(this)
@@ -47,14 +48,10 @@ export class MemoryDatabase extends ICollection implements DatabaseProtocol {
     else {
       foundDocs.forEach((foundDoc) => {
         collection?.find((collectionDoc: Document) => {
-          if (isEqual(collectionDoc, foundDoc)) {
-            const index = collection?.indexOf(collectionDoc)
-            collection.splice(index, 1)
+          const index = collection?.indexOf(collectionDoc)
+          collection.splice(index, 1)
 
-            return true
-          } else {
-            return false
-          }
+          return true
         })
       })
     }
@@ -82,7 +79,7 @@ export class MemoryDatabase extends ICollection implements DatabaseProtocol {
       }
     })
 
-    if (found == null) return false
+    if (!found) return false
 
     return true
   }

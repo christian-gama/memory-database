@@ -19,6 +19,16 @@ describe('dotToObject', () => {
     expect(result).toEqual({ deep: { dot: { object: 'value' } }, other: { deep: { dot: { object: 'value' } } } })
   })
 
+  it('should return nested object', () => {
+    const sut = makeSut()
+
+    const obj = { 'dot.object': 'value' }
+
+    const result = sut(obj)
+
+    expect(result).toEqual({ dot: { object: 'value' } })
+  })
+
   it('should return nested object along the rest of object', () => {
     const sut = makeSut()
 

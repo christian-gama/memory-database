@@ -9,8 +9,8 @@ export const dotToObject = (obj: Record<string, any>): Record<string, any> => {
 
     let target = result
     while (properties.length > 1) {
-      const property = properties.shift()
-      if (!property) break
+      const property = properties.shift() as string
+
       target = target[property] = target[property] || {}
     }
 

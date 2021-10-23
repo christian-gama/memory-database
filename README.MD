@@ -1,1 +1,1 @@
-A memory database that simules CRUD operations.
+A memory database that simulates CRUD operations.
